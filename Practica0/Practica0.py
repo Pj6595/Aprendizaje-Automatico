@@ -18,6 +18,7 @@ def integra_mc_iter(fun, a, b, num_puntos= 1000):
             cont += 1
     res = cont/num_puntos * (b - a) * max
     toc = time.process_time()
+    print("Resultado iterativo: ", res)
     return 1000 * (toc - tic)
     
 #version con arrays
@@ -31,11 +32,16 @@ def integra_mc_vec(fun, a, b, num_puntos = 1000):
     cont = np.sum(ran < far)
     res = cont/num_puntos * (b - a) * max
     toc = time.process_time()
+    # Líneas para dibujar la función y los puntos
+    # plt.plot(arr, far, c='blue')
+    # plt.scatter(arr, ran, marker='x', c='red')
+    # plt.savefig('integral.png')
+    print("Resultado vectorizando: ", res)
     return 1000 * (toc - tic)
 
 def fun(x):
-    return -2*x + 5
-    #return -x*x + 4
+    #return -2*x + 5
+    return -x*x + 4
 
 def compara_tiempos():
     sizes = np.linspace(100,1000000, 20,dtype='int')
