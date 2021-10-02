@@ -6,8 +6,7 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 def carga_csv(file_name):
-    data = read_csv(file_name, header = None).to_numpy()
-    return data.astype(float)
+    return read_csv(file_name, header = None).to_numpy().astype(float)
 
 def make_data(t0_range, t1_range, X, Y):
     step = 0.1
@@ -26,7 +25,7 @@ def coste(X, Y, Theta):
         sumatorio += ((Theta[0] + Theta[1] * X[i]) - Y[i]) ** 2
     return sumatorio / (2 * len(X))
 
-def dibujaCoste(Theta0, Theta1, Coste):
+def dibuja_coste(Theta0, Theta1, Coste):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -40,33 +39,39 @@ def dibujaCoste(Theta0, Theta1, Coste):
     plt.contour(Theta0, Theta1, Coste, np.logspace(-2,3,20))
     plt.show()
 
-
-def main():
-    data = carga_csv('ex1data1.csv')
-    X = data[:,0]
-    Y = data[:,1]
+def descenso_gradiente(X,Y):
     m = len(X)
     alpha = 0.01
     theta_0 = theta_1 = 0
     for _ in range(1500):
-        #print('ITERACION NUMERO ', _, '\n')
         sum_0 = sum_1 = 0
         for i in range(m):
             sum_0 += (theta_0 + theta_1 * X[i]) - Y[i]
             sum_1 += ((theta_0 + theta_1 * X[i]) - Y[i]) * X[i]
         theta_0 = theta_0 - (alpha/m) * sum_0
         theta_1 = theta_1 - (alpha/m) * sum_1
-
-    A, B, C = make_data([-10,10], [-1,4], X, Y)
-    dibujaCoste(A, B, C)
-
-    plt.plot(X,Y,"x")
     min_x = min(X)
     max_x = max(X)
     min_y = theta_0 + theta_1 * min_x
     max_y = theta_0 + theta_1 * max_x
+
+    Coste = coste(X, Y, (theta_0, theta_1))
+
+    #Dibujamos el resultado
+    plt.plot(X, Y, "x")
     plt.plot([min_x, max_x], [min_y, max_y])
-    plt.savefig("regresion1.pdf")
+    plt.savefig("descenso_gradiente.pdf")
+
+    return (theta_0, theta_1), Coste 
+
+def apartado_1():
+    data = carga_csv('ex1data1.csv')
+    X = data[:,0]
+    Y = data[:,1]
+    descenso_gradiente(X, Y)
+
+    A, B, C = make_data([-10,10], [-1,4], X, Y)
+    dibuja_coste(A, B, C)
 
 def normalizar(X):
     mu = np.average(X)
@@ -77,8 +82,9 @@ def normalizar(X):
         X_norm[i] = (X[i] - mu) / sigma
 
     return X_norm, mu, sigma
+    
 
-def main2():
+def apa():
     data = carga_csv("ex1data2.csv")
     X = data[:,0]
     Y = data[:,1]
@@ -90,5 +96,32 @@ def main2():
     print(mux)
     print(sigmax)
 
+def descenso_gradiente_vec(X, Y, m, Theta):
+    J = (np.transpose((X * Theta) - Y) * ((X * Theta) - Y)) / 2*m
+    return J
+
+def apartado_2_1():
+    data = carga_csv("ex1data2.csv")
+    X = data[:, :-1]
+    Y = data[:, -1]
+    m = np.shape(X)[0]
+    n = np.shape(X)[1]
+    X = np.hstack([np.ones([m, 1]), X])
+
+def ecuacion_normal(X,Y):
+    Theta = np.matmul(np.matmul(np.linalg.inv(np.matmul(np.transpose(X), X)), np.transpose(X)), Y)
+    return Theta
+
+def apartado_2_2():
+    data = carga_csv('ex1data2.csv')
+    X = data[:, :-1]
+    Y = data[:, -1]
+
+    m = np.shape(X)[0]
+    X = np.hstack([np.ones([m, 1]), X])
+    theta_normal = ecuacion_normal(X,Y)
+
+    print('Theta de ecuación normal: ', theta_normal, '\n')
+
 #main()
-main2()
+apartado_2_2()
