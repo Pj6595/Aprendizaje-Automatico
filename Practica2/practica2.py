@@ -120,11 +120,22 @@ def apartado2():
     graficaLimite(Xp, Y, theta_opt, poly)
 
     # Apartado 2.4
-    
-    
-        
-def efectosReg(Xp, Y):
-    print("jajasi")
+    efectosReg(Xp, Y, thetas)
+
+def efectosReg(Xp, Y, thetas):
+    accuracy = []
+    lambdas = np.linspace(0, 10, 100)
+    for i in range(np.shape(lambdas)[0]):
+        theta_opt = opt.fmin_tnc(
+            func=costeReg, x0=thetas, fprime=gradienteReg, args=(Xp, Y, lambdas[i]))[0]
+        accuracy.append(
+            np.mean((sigmoide(np.matmul(Xp, theta_opt)) >= 0.5) == Y) * 100)
+
+    plt.figure()
+    plt.xlabel("Valores de lambda")
+    plt.ylabel("Precisión")
+    plt.plot(lambdas, accuracy)
+    plt.savefig("Regularization")
 
 def costeReg(thetas, x, y, lamb):
     sigXT = sigmoide(np.matmul(x, thetas))
