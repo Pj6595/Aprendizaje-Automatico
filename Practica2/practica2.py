@@ -8,7 +8,6 @@ def carga_csv(file_name):
     return read_csv(file_name, header=None).to_numpy().astype(float)
 
 def apartado_1_1():
-    
     data = carga_csv('ex2data1.csv')
     X = data[:, :-1]
     Y = data[:, -1]
@@ -25,11 +24,9 @@ def apartado_1_1():
     plt.legend()
     plt.savefig('dataGraph1')
 
-    return 0   
-
 def sigmoide(target):
-    target = 1 / ( 1 + np.exp(-target))
-    return target
+    result = 1 / ( 1 + np.exp(-target))
+    return result
 
 def apartado_1_2():
 
