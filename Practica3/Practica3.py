@@ -59,10 +59,9 @@ def propagar(X, theta1, theta2):
     a1 = np.hstack([np.ones([m,1]), X])
     z2 = np.dot(a1, theta1.T)
     a2 = np.hstack([np.ones([m, 1]), sigmoide(z2)])
-    #a2 += a2 / (6,1)
     z3 = np.dot(a2, theta2.T)
     a3 = sigmoide(z3)
-    return a1, z2, a2, z3, a3
+    return a3
 
 def prediccion_neuronal(X, a3):
     return [(np.argmax(a3[imagen]) + 1) for imagen in range(X.shape[0])]
@@ -73,8 +72,8 @@ def apartado2():
     theta1, theta2 = weights['Theta1'], weights['Theta2']
     X = data['X']
     y = data['y'].ravel()
-    a1, z2, a2, z3, a3 = propagar(X, theta1, theta2)
-    Y_pred = prediccion_neuronal(X, a3)
+    h = propagar(X, theta1, theta2)
+    Y_pred = prediccion_neuronal(X, h)
     precision = np.sum((y == np.array(Y_pred))) / np.shape(X)[0]
     print("La precisión de la red neuronal es de " , precision * 100)
 
