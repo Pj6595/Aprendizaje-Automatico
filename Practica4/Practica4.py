@@ -109,6 +109,7 @@ reg_param = 1
 
 cost, grad = backprop(params_rn, input_size, num_ocultas, num_labels, X, y_onehot, reg_param)
 a = cnn.checkNNGradients(backprop, 1)
+print(a)
 
 fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels, X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
 
