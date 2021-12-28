@@ -13,9 +13,11 @@ X_orig = X
 y = data['y']
 
 X_test = data['Xtest']
+X_test_orig = X_test
 y_test = data['ytest']
 
 X_val = data['Xval']
+X_val_orig = X_val
 y_val = data['yval']
 
 X = np.hstack([np.ones([X.shape[0],1]),X])
@@ -37,6 +39,18 @@ def gradient(thetas, X, Y, reg=0):
     grad = (1/m) * np.dot((H-Y.T), X) + (reg/m) * aux
     return grad
 
+def get_errors(X, y, X_val, y_val, reg = 0):
+    m = X.shape[0]
+    train_errors = []
+    val_errors = []
+
+    for i in range(1, m + 1):
+        thetas = np.zeros(X.shape[1])
+        thetas_opt = opt.minimize(fun= cost, x0= thetas, args= (X[:i], y[:i], reg)).x
+        train_errors.append(cost(thetas_opt, X[:i], y[:i]))
+        val_errors.append(cost(thetas_opt, X_val, y_val))
+    return train_errors, val_errors
+
 def apartado_1():
     print("Cost: " + str(cost(thetas, X, y, 1)))
     print("Gradient: " + str(gradient(thetas, X, y, 1)))
@@ -55,19 +69,14 @@ def apartado_1():
 def apartado_2():
     m = X.shape[0]
     reg = 0
-    train_errors = []
-    val_errors = []
-
-    for i in range(1, m + 1):
-        thetas_opt = opt.minimize(fun= cost, x0= thetas, args= (X[:i], y[:i], reg)).x
-        train_errors.append(cost(thetas_opt, X[:i], y[:i]))
-        val_errors.append(cost(thetas_opt, X_val, y_val))
+    
+    train_errors, val_errors = get_errors(X, y, X_val, y_val, reg)
 
     plt.figure()
     plt.plot(range(1, m+1), train_errors)
     plt.plot(range(1, m+1), val_errors, c='orange')
     plt.legend(("Train", "Cross Validation"))
-    plt.xlabel("Number of trainig examples")
+    plt.xlabel("Number of training examples")
     plt.ylabel("Error")
     plt.savefig("apartado2.png")
 
@@ -84,7 +93,7 @@ def normalizar(X):
 
     return X_norm, mu, sigma
 
-def apartado_3():
+def apartado_3_1():
     p = 8
     reg = 0
     
@@ -92,7 +101,7 @@ def apartado_3():
     X_pol = np.hstack([np.ones((X_pol.shape[0], 1)), X_pol])
 
     thetas = np.zeros(X_pol.shape[1])
-    
+
     thetas_opt = opt.minimize(fun = cost, x0 = thetas, args = (X_pol, y, reg)).x
     plt.figure()
 
@@ -105,9 +114,71 @@ def apartado_3():
     plt.scatter(X_orig,y,marker="X", color="red")
     plt.xlabel('Change in water level (x)')
     plt.ylabel('Water flowing out of the dam (y)')
-    plt.savefig("apartado_3.png")
+    plt.savefig("apartado3_1.png")
+
+def apartado_3_2():
+    m = X.shape[0]
+    reg = 0
+    p = 8
+    
+    X_pol, mu, sigma = normalizar(polinomial(X_orig, p))
+    X_pol = np.hstack([np.ones((X_pol.shape[0], 1)), X_pol])
+
+    X_val_pol = ((polinomial(X_val_orig, p)) - mu) / sigma
+    X_val_pol = np.hstack([np.ones((X_val_pol.shape[0], 1)), X_val_pol])
+
+    train_errors, val_errors = get_errors(X_pol, y, X_val_pol, y_val, reg)
+
+    plt.figure()
+    plt.plot(range(1, m+1), train_errors)
+    plt.plot(range(1, m+1), val_errors, c='orange')
+    plt.legend(("Train", "Cross Validation"))
+    plt.xlabel("Number of training examples")
+    plt.ylabel("Error")
+    plt.savefig("apartado3_2.png")
+
+def apartado_4():
+    lambdas = [0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
+    p = 8
+    train_errors = []
+    val_errors = []
+    
+    X_pol, mu, sigma = normalizar(polinomial(X_orig, p))
+    X_pol = np.hstack([np.ones((X_pol.shape[0], 1)), X_pol])
+
+    X_val_pol = ((polinomial(X_val_orig, p)) - mu) / sigma
+    X_val_pol = np.hstack([np.ones((X_val_pol.shape[0], 1)), X_val_pol])
+
+    thetas = np.zeros(p + 1)
+    i = 0
+
+    for l in lambdas:
+        thetas_opt = opt.minimize(fun= cost, x0= thetas, args= (X_pol, y, l)).x
+        train_errors.append(cost(thetas_opt, X_pol, y))
+        val_errors.append(cost(thetas_opt, X_val_pol, y_val))
+        i += 1
+
+    plt.figure()
+    plt.plot(lambdas, train_errors)
+    plt.plot(lambdas, val_errors, c='orange')
+    plt.legend(("Train", "Cross Validation"))
+    plt.xlabel("lambdas")
+    plt.ylabel("Error")
+    plt.savefig("apartado_4.png")
     plt.show()
 
-apartado_1()
-apartado_2()
-apartado_3()
+    ##estimación el error
+    reg = 3
+    X_test_pol = ((polinomial(X_test_orig, p)) - mu) /sigma
+    X_test_pol = np.c_[np.ones((len(X_test_pol), 1)), X_test_pol]
+    theta = np.zeros(p+1)
+
+    thetas_opt = opt.minimize(fun = cost, x0 = theta, args = (X_pol, y, reg)).x
+
+    print('El error obtenido para lambda = {} es {}'.format(reg, cost(thetas_opt, X_test_pol, y_test)))
+
+# apartado_1()
+# apartado_2()
+# apartado_3_1()
+# apartado_3_2()
+apartado_4()
