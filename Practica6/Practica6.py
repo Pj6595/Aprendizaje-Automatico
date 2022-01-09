@@ -127,7 +127,6 @@ def score_emails(X, y):
 
 def apartado2():
     vocab = getVocabDict()
-    files = glob.glob('spam/*.txt')
     Xspam, yspam = read_directory('spam/*.txt', vocab)
 
     Xeasy_ham, yeasy_ham = read_directory('easy_ham/*.txt', vocab)
@@ -152,5 +151,5 @@ def apartado2():
 
 #apartado1_1()
 #apartado1_2()
-#apartado1_3()
-apartado2()
+apartado1_3()
+#apartado2()
