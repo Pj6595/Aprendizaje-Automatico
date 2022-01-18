@@ -77,4 +77,4 @@ def apartado2():
     precision = np.sum((y == np.array(Y_pred))) / np.shape(X)[0]
     print("La precisión de la red neuronal es de " , precision * 100)
 
-#apartado1()
+#apartado2()
