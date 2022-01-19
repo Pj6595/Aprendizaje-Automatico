@@ -123,7 +123,6 @@ def score_emails(X, y):
     print('Precisión: {:.3f}%'.format(score*100))
     print('Tiempo de ejecución: {}'.format(totalTime))
     print('Matriz de confusión: ')
-    print(confusion_matrix(y_test, y_pred))
 
 def apartado2():
     vocab = getVocabDict()
