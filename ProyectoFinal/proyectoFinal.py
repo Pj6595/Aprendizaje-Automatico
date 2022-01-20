@@ -159,14 +159,10 @@ def random_weights(L_in, L_out):
 	epsilon = np.sqrt(6)/np.sqrt(L_in + L_out)
 	return np.random.random((L_in, L_out)) * epsilon - epsilon/2
 
-
 def predict_nn(X, h):
 	return [(np.argmax(h[image])) for image in range(X.shape[0])]
 	
-def neural_network(X_train, y_train, X_test, y_test, fileName):
-
-	X = X_train
-	y = y_train
+def neural_network(X, y, fileName):
 	m = len(y)
 	input_size = X.shape[1]
 	num_labels = 10
@@ -183,7 +179,7 @@ def neural_network(X_train, y_train, X_test, y_test, fileName):
 	theta1 = random_weights(num_ocultas, input_size + 1)
 	theta2 = random_weights(num_labels, num_ocultas +1)
 	params_rn = np.concatenate((np.ravel(theta1), np.ravel(theta2)))
-	reg_param = 1
+	reg_param = 0.1
 
 	cost, grad = backprop(params_rn, input_size, num_ocultas,
 						num_labels, X, y_onehot, reg_param)
@@ -200,78 +196,81 @@ def neural_network(X_train, y_train, X_test, y_test, fileName):
 
 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
 
-	y_pred = predict_nn(X_test, h)
+	y_pred = predict_nn(X, h)
 
 	print("El porcentaje de acierto del modelo es: {}%".format(
-		np.sum((y_test == y_pred))/X_test.shape[0] * 100))
+		np.sum((y == y_pred))/X.shape[0] * 100))
 
-	cm = confusion_matrix(y_test, y_pred)
+	cm = confusion_matrix(y, y_pred)
 	plt.figure()
 	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
 	fig.savefig(fileName + "Neural", dpi=400)
 
-	lambdas = np.linspace(0, 1, 10)
+	# lambdas = np.linspace(0, 1, 11)
 
-	accuracy = []
-	y_preds = []
+	# accuracy = []
+	# y_preds = []
 
-	for lamb in lambdas:
-		print("Voy por ", lamb, " de ", len(lambdas))
-		reg_param = lamb
-		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
-							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
+	# for lamb in lambdas:
+	# 	print("Voy por ", lamb, " de ", len(lambdas))
+	# 	reg_param = lamb
+	# 	fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
+	# 						X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
 
-		theta1_opt = np.reshape(
-			fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
-		theta2_opt = np.reshape(
-			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
+	# 	theta1_opt = np.reshape(
+	# 		fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
+	# 	theta2_opt = np.reshape(
+	# 		fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
-		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-		y_pred = predict_nn(X, h)
-		y_preds.append(y_pred)
-		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
+	# 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
+	# 	y_pred = predict_nn(X, h)
+	# 	y_preds.append(y_pred)
+	# 	accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
-	plt.plot(lambdas, accuracy)
-	plt.savefig(fileName + "LambdaAccuracyNeural")
+	# plt.figure()
+	# plt.plot(lambdas, accuracy)
+	# plt.savefig(fileName + "LambdaAccuracyNeural")
 
-	y_pred = y_preds[np.argmax(accuracy)]
-	cm = confusion_matrix(y, y_pred)
-	plt.figure()
-	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
-	fig.savefig(fileName + "NeuralBestLambda", dpi=400)
+	# y_pred = y_preds[np.argmax(accuracy)]
+	# cm = confusion_matrix(y, y_pred)
+	# plt.figure()
+	# fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	# fig.savefig(fileName + "NeuralBestLambda", dpi=400)
 
-	iters = np.linspace(10, 70, 7)
+	# iters = np.linspace(10, 70, 7)
 
-	accuracy = []
-	y_preds = []
+	# accuracy = []
+	# y_preds = []
 
-	reg_param = 1
+	# reg_param = 1
 
-	for iter in iters:
-		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
-							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(iter)})
+	# for iter in iters:
+	# 	print("Voy por ", iter, " de ", len(iters))
+	# 	fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
+	# 						X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(iter)})
 
-		theta1_opt = np.reshape(
-			fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
-		theta2_opt = np.reshape(
-			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
+	# 	theta1_opt = np.reshape(
+	# 		fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
+	# 	theta2_opt = np.reshape(
+	# 		fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
-		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-		y_pred = predict_nn(X, h)
-		y_preds.append(y_pred)
-		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
+	# 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
+	# 	y_pred = predict_nn(X, h)
+	# 	y_preds.append(y_pred)
+	# 	accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
-	y_pred = y_preds[np.argmax(accuracy)]
-	cm = confusion_matrix(y, y_pred)
-	plt.figure()
-	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
-	fig.savefig(fileName + "NeuralBestIter", dpi=400)
+	# y_pred = y_preds[np.argmax(accuracy)]
+	# cm = confusion_matrix(y, y_pred)
+	# plt.figure()
+	# fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	# fig.savefig(fileName + "NeuralBestIter", dpi=400)
 
-	plt.figure()
-	plt.plot(iters, accuracy)
-	plt.savefig(fileName + "IterationAccuracyNeural")
+	# plt.figure()
+	# plt.plot(iters, accuracy)
+	# plt.savefig(fileName + "IterationAccuracyNeural")
 
-def svm(X_train, y_train, X_test, y_test, fileName):
+def svm(X, y, fileName):
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 	X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) 
 	
 	values = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300]
@@ -295,6 +294,9 @@ def svm(X_train, y_train, X_test, y_test, fileName):
 	sigma_opt = values[scores.argmax()%n]
 	print("C óptimo: {}, sigma óptimo: {}".format(C_opt, sigma_opt))
 
+	# C_opt = 3
+	# sigma_opt = 0.03
+
 	svm = SVC(kernel='rbf', C= C_opt, gamma=1 / (2 * sigma_opt)**2)
 	svm.fit(X_train, y_train)
 	y_pred = svm.predict(X_test)
@@ -307,6 +309,7 @@ def svm(X_train, y_train, X_test, y_test, fileName):
 	print('Tiempo de ejecución: {}'.format(totalTime))
 	print('Matriz de confusión: ')
 	cm = confusion_matrix(y_test, y_pred)
+	plt.figure()
 	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
 	fig.savefig(fileName + "SVM", dpi=400)
 
@@ -350,14 +353,12 @@ columns = np.arange(df.shape[1]-1)
 #columns = [1, 5, 11, 12, 29, 33, 56, 64, 74]
 
 non_bankrupt_sample = df[df[cname] == 0]
-# size = non_bankrupt_sample.shape[0] * 0.5
-# non_bankrupt_sample_smote = non_bankrupt_sample[:int(size)]
 non_bankrupt_sample_cut = non_bankrupt_sample[:220]
 
 bankrupt_sample = df[df[cname] == 1]
 #create new data frame
-# smote_df = pd.concat([bankrupt_sample,non_bankrupt_sample_smote],axis = 0)
-# smote_df.head()
+#smote_df = pd.concat([bankrupt_sample,non_bankrupt_sample_smote],axis = 0)
+#smote_df.head()
 cut_df = pd.concat([bankrupt_sample,non_bankrupt_sample_cut],axis = 0)
 cut_df.head()
 
@@ -366,6 +367,9 @@ y_cut = cut_df[cname]
 
 X_orig = df.drop(cname, axis=1)
 y_orig = df[cname]
+
+size = int(df.shape[0] * 0.5)
+#df = df[:size]
 
 fractional_columns = get_fraction_valued_columns(df=df.drop([cname],axis=1))
 non_fractional_columns = df.drop([cname],axis=1).columns.difference(fractional_columns)
@@ -431,14 +435,25 @@ ex_df.head()
 X_test_orig = ex_df.drop(cname, axis = 1)
 y_test_orig = ex_df[cname]
 
+df = scaled_data
+
+non_bankrupt_sample = df[df[cname] == 0][:220]
+bankrupt_sample = df[df[cname] == 1][:220]
+
+sex_df = pd.concat([non_bankrupt_sample, bankrupt_sample],axis = 0)
+sex_df.head()
+
+X_cut = sex_df.drop(cname, axis = 1)
+y_cut = sex_df[cname]
+
 datasets = [	
 	data(X_orig, y_orig, X_train_orig, y_train_orig, X_test_orig, y_test_orig, 'Original'),
 	data(X_cut, y_cut, X_train_cut, y_train_cut, X_test_cut, y_test_cut, 'Cut'),
 	data(X_sm, y_sm, X_train_sm, y_train_sm, X_test_sm, y_test_sm, 'Smote')
 ]
 
-for d in datasets:
+for d in datasets[1:]:
 	d.to_numpy()
-	logistic_regression(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
-	neural_network(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
-	svm(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
+	#logistic_regression(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
+	#neural_network(d.X, d.y, d.name)
+	svm(d.X, d.y, d.name)
