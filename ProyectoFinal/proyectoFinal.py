@@ -47,10 +47,6 @@ def prediccion(X, Y, clasificadores):
 		Y_pred.append(max(predicciones.items(), key=operator.itemgetter(1))[0])
 	return Y_pred, np.sum((Y == np.array(Y_pred)))/np.shape(X)[0] * 100
 
-# def sigmoide(target):
-# 	result = 1 / (1 + np.exp(-target))
-# 	return result
-
 def costeReg(thetas, x, y, lamb):
 	sigXT = sigmoide(np.dot(x, thetas))
 	a1 = (-1/np.shape(x)[0])
@@ -168,14 +164,11 @@ def neural_network(X, y, fileName):
 	num_labels = 10
 	num_ocultas = 25
 
-	#y = y - 1
 	y_onehot = np.zeros((m, num_labels))
 
 	for i in range(m):
 		y_onehot[i][int(y[i])] = 1
-	# a1, a2, h = propagar(X, theta1, theta2)
 
-	#params_rn = np.concatenate((np.ravel(theta1), np.ravel(theta2)))
 	theta1 = random_weights(num_ocultas, input_size + 1)
 	theta2 = random_weights(num_labels, num_ocultas +1)
 	params_rn = np.concatenate((np.ravel(theta1), np.ravel(theta2)))
@@ -206,68 +199,68 @@ def neural_network(X, y, fileName):
 	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
 	fig.savefig(fileName + "Neural", dpi=400)
 
-	# lambdas = np.linspace(0, 1, 11)
+	lambdas = np.linspace(0, 1, 11)
 
-	# accuracy = []
-	# y_preds = []
+	accuracy = []
+	y_preds = []
 
-	# for lamb in lambdas:
-	# 	print("Voy por ", lamb, " de ", len(lambdas))
-	# 	reg_param = lamb
-	# 	fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
-	# 						X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
+	for lamb in lambdas:
+		print("Voy por ", lamb, " de ", len(lambdas))
+		reg_param = lamb
+		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
+							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
 
-	# 	theta1_opt = np.reshape(
-	# 		fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
-	# 	theta2_opt = np.reshape(
-	# 		fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
+		theta1_opt = np.reshape(
+			fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
+		theta2_opt = np.reshape(
+			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
-	# 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-	# 	y_pred = predict_nn(X, h)
-	# 	y_preds.append(y_pred)
-	# 	accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
+		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
+		y_pred = predict_nn(X, h)
+		y_preds.append(y_pred)
+		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
-	# plt.figure()
-	# plt.plot(lambdas, accuracy)
-	# plt.savefig(fileName + "LambdaAccuracyNeural")
+	plt.figure()
+	plt.plot(lambdas, accuracy)
+	plt.savefig(fileName + "LambdaAccuracyNeural")
 
-	# y_pred = y_preds[np.argmax(accuracy)]
-	# cm = confusion_matrix(y, y_pred)
-	# plt.figure()
-	# fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
-	# fig.savefig(fileName + "NeuralBestLambda", dpi=400)
+	y_pred = y_preds[np.argmax(accuracy)]
+	cm = confusion_matrix(y, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "NeuralBestLambda", dpi=400)
 
-	# iters = np.linspace(10, 70, 7)
+	iters = np.linspace(10, 70, 7)
 
-	# accuracy = []
-	# y_preds = []
+	accuracy = []
+	y_preds = []
 
-	# reg_param = 1
+	reg_param = 1
 
-	# for iter in iters:
-	# 	print("Voy por ", iter, " de ", len(iters))
-	# 	fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
-	# 						X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(iter)})
+	for iter in iters:
+		print("Voy por ", iter, " de ", len(iters))
+		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
+							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(iter)})
 
-	# 	theta1_opt = np.reshape(
-	# 		fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
-	# 	theta2_opt = np.reshape(
-	# 		fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
+		theta1_opt = np.reshape(
+			fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
+		theta2_opt = np.reshape(
+			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
-	# 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-	# 	y_pred = predict_nn(X, h)
-	# 	y_preds.append(y_pred)
-	# 	accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
+		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
+		y_pred = predict_nn(X, h)
+		y_preds.append(y_pred)
+		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
-	# y_pred = y_preds[np.argmax(accuracy)]
-	# cm = confusion_matrix(y, y_pred)
-	# plt.figure()
-	# fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
-	# fig.savefig(fileName + "NeuralBestIter", dpi=400)
+	y_pred = y_preds[np.argmax(accuracy)]
+	cm = confusion_matrix(y, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "NeuralBestIter", dpi=400)
 
-	# plt.figure()
-	# plt.plot(iters, accuracy)
-	# plt.savefig(fileName + "IterationAccuracyNeural")
+	plt.figure()
+	plt.plot(iters, accuracy)
+	plt.savefig(fileName + "IterationAccuracyNeural")
 
 def svm(X, y, fileName):
 	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
@@ -293,9 +286,6 @@ def svm(X, y, fileName):
 	C_opt = values[scores.argmax()//n]
 	sigma_opt = values[scores.argmax()%n]
 	print("C óptimo: {}, sigma óptimo: {}".format(C_opt, sigma_opt))
-
-	# C_opt = 3
-	# sigma_opt = 0.03
 
 	svm = SVC(kernel='rbf', C= C_opt, gamma=1 / (2 * sigma_opt)**2)
 	svm.fit(X_train, y_train)
@@ -347,18 +337,14 @@ class data:
 
 df = pd.read_csv('data.csv')
 
-#Take sample to balance the data
 cname = 'Bankrupt?'
 columns = np.arange(df.shape[1]-1)
-#columns = [1, 5, 11, 12, 29, 33, 56, 64, 74]
 
 non_bankrupt_sample = df[df[cname] == 0]
 non_bankrupt_sample_cut = non_bankrupt_sample[:220]
 
 bankrupt_sample = df[df[cname] == 1]
-#create new data frame
-#smote_df = pd.concat([bankrupt_sample,non_bankrupt_sample_smote],axis = 0)
-#smote_df.head()
+
 cut_df = pd.concat([bankrupt_sample,non_bankrupt_sample_cut],axis = 0)
 cut_df.head()
 
@@ -369,7 +355,6 @@ X_orig = df.drop(cname, axis=1)
 y_orig = df[cname]
 
 size = int(df.shape[0] * 0.5)
-#df = df[:size]
 
 fractional_columns = get_fraction_valued_columns(df=df.drop([cname],axis=1))
 non_fractional_columns = df.drop([cname],axis=1).columns.difference(fractional_columns)
@@ -389,6 +374,8 @@ Shape of X after SMOTE:{X_sm.shape}''',"\n\n")
 
 print(f'''Target Class distributuion before SMOTE:\n{y.value_counts(normalize=True)}
 Target Class distributuion after SMOTE :\n{y_sm.value_counts(normalize=True)}''')
+
+# usado para sacar las features
 
 # pos = smote_df[y_sm == 1]
 # neg = smote_df[y_sm == 0][:220]
@@ -425,26 +412,30 @@ X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(
 	X_orig, y_orig, test_size=0.2, random_state=777
 )
 
-size = bankrupt_sample.shape[0] * 0.8
-bs = bankrupt_sample[int(size):]
-nbs = non_bankrupt_sample[(non_bankrupt_sample.shape[0] - bs.shape[0]):]
+# usado para poner casos de prueba 50/50 en 'Original'
 
-ex_df = pd.concat([bs, nbs],axis = 0)
-ex_df.head()
+# size = bankrupt_sample.shape[0] * 0.8
+# bs = bankrupt_sample[int(size):]
+# nbs = non_bankrupt_sample[(non_bankrupt_sample.shape[0] - bs.shape[0]):]
 
-X_test_orig = ex_df.drop(cname, axis = 1)
-y_test_orig = ex_df[cname]
+# ex_df = pd.concat([bs, nbs],axis = 0)
+# ex_df.head()
 
-df = scaled_data
+# X_test_orig = ex_df.drop(cname, axis = 1)
+# y_test_orig = ex_df[cname]
 
-non_bankrupt_sample = df[df[cname] == 0][:220]
-bankrupt_sample = df[df[cname] == 1][:220]
+# usado para normalizar 'Cut' en SVM
 
-sex_df = pd.concat([non_bankrupt_sample, bankrupt_sample],axis = 0)
-sex_df.head()
+# df = scaled_data
 
-X_cut = sex_df.drop(cname, axis = 1)
-y_cut = sex_df[cname]
+# non_bankrupt_sample = df[df[cname] == 0][:220]
+# bankrupt_sample = df[df[cname] == 1][:220]
+
+# nex_df = pd.concat([non_bankrupt_sample, bankrupt_sample],axis = 0)
+# nex_df.head()
+
+# X_cut = nex_df.drop(cname, axis = 1)
+# y_cut = nex_df[cname]
 
 datasets = [	
 	data(X_orig, y_orig, X_train_orig, y_train_orig, X_test_orig, y_test_orig, 'Original'),
@@ -452,8 +443,8 @@ datasets = [
 	data(X_sm, y_sm, X_train_sm, y_train_sm, X_test_sm, y_test_sm, 'Smote')
 ]
 
-for d in datasets[1:]:
+for d in datasets:
 	d.to_numpy()
-	#logistic_regression(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
-	#neural_network(d.X, d.y, d.name)
+	logistic_regression(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
+	neural_network(d.X, d.y, d.name)
 	svm(d.X, d.y, d.name)
