@@ -1,10 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pandas.io.parsers import read_csv
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-from sklearn.preprocessing import PolynomialFeatures
 import scipy.optimize as opt
 import operator
 import checkNNGradients as cnn
@@ -49,11 +45,11 @@ def prediccion(X, Y, clasificadores):
 
 			predicciones[i] = prediccion
 		Y_pred.append(max(predicciones.items(), key=operator.itemgetter(1))[0])
-	return np.sum((Y == np.array(Y_pred)))/np.shape(X)[0] * 100
+	return Y_pred, np.sum((Y == np.array(Y_pred)))/np.shape(X)[0] * 100
 
-def sigmoide(target):
-	result = 1 / (1 + np.exp(-target))
-	return result
+# def sigmoide(target):
+# 	result = 1 / (1 + np.exp(-target))
+# 	return result
 
 def costeReg(thetas, x, y, lamb):
 	sigXT = sigmoide(np.dot(x, thetas))
@@ -69,37 +65,35 @@ def gradienteReg(thetas, x, y, lamb):
 	a = ((1/np.shape(x)[0]) * np.matmul(np.transpose(x), (sigXT - y))) + ((lamb/np.shape(x)[0]) * thetas)
 	return a
 	
-def logistic_regression(X_train, y_train, X_test, y_test):
-	#sample = np.random.choice(X.shape[0], 9)
-	#plt.imshow(X[sample, :].reshape(-1, 20).T)
-	#plt.axis('off')
-	#plt.savefig('numeros.png')
-	for i in np.arange(1, 3, 0.1):
+def logistic_regression(X_train, y_train, X_test, y_test, fileName):
+
+	lambdas = np.linspace(1, 3, 20)
+
+	accuracy = []
+	y_preds = []
+
+	for i in lambdas:
 		clasificadores = oneVsAll(X_train, y_train, 2, i)
-		print(prediccion(X_test, y_test, clasificadores))
-	# aux = clasificadores[0]
-	# clasificadores[0] = clasificadores[1]
-	# clasificadores[1] = aux
-	#clasificadores *= 1e5
-	
+		y_pred, acc = prediccion(X_test, y_test, clasificadores)
+		accuracy.append(acc)
+		y_preds.append(y_pred)
+		print(acc)
 
-# def sigmoide(x):
-# 	return 1 / (1 + np.exp(-x))
+	y_pred = y_preds[np.argmax(accuracy)]
+	cm = confusion_matrix(y_test, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "Logistic", dpi=400)
 
-# def sigmoide(x):
-#     sig = np.where(x < 0, np.exp(x)/(1 + np.exp(x)), 1/(1 + np.exp(-x)))
-#     return sig
+	plt.figure()
+	plt.plot(lambdas, accuracy)
+	plt.savefig(fileName + "LambdaAccuracyLogistic")
 
 def sigmoide(x):
 	return special.expit(x)
 
 def sigmoide_prima(x):
 	return sigmoide(x) / (1 - sigmoide(x))
-
-
-def random_weights(min, max, epsilon=0.0001):
-	return np.random.random((min, max)) * 2 * epsilon - epsilon
-
 
 def propagar(X, theta1, theta2):
 	m = np.shape(X)[0]
@@ -169,17 +163,10 @@ def random_weights(L_in, L_out):
 def predict_nn(X, h):
 	return [(np.argmax(h[image])) for image in range(X.shape[0])]
 	
-def neural_network(X, y):
-	# weights = loadmat('ex4weights.mat')
-	# data = loadmat('ex4data1.mat')
-	# theta1, theta2 = weights['Theta1'], weights['Theta2']
-	# X = data['X']
-	# y = data['y'].ravel()
+def neural_network(X_train, y_train, X_test, y_test, fileName):
 
-	# sample = np.random.choice(X.shape[0], 100)
-	# imgs = displayData(X[sample, :])
-	# plt.savefig('numbers')
-
+	X = X_train
+	y = y_train
 	m = len(y)
 	input_size = X.shape[1]
 	num_labels = 10
@@ -213,14 +200,23 @@ def neural_network(X, y):
 
 	a1, a2, h = propagar(X, theta1_opt, theta2_opt)
 
+	y_pred = predict_nn(X_test, h)
+
 	print("El porcentaje de acierto del modelo es: {}%".format(
-		np.sum((y == predict_nn(X, h)))/X.shape[0] * 100))
+		np.sum((y_test == y_pred))/X_test.shape[0] * 100))
+
+	cm = confusion_matrix(y_test, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "Neural", dpi=400)
 
 	lambdas = np.linspace(0, 1, 10)
 
 	accuracy = []
+	y_preds = []
 
 	for lamb in lambdas:
+		print("Voy por ", lamb, " de ", len(lambdas))
 		reg_param = lamb
 		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
 							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': 70})
@@ -231,19 +227,29 @@ def neural_network(X, y):
 			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
 		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-		accuracy.append((np.sum((y == predict_nn(X, h)))/X.shape[0] * 100))
+		y_pred = predict_nn(X, h)
+		y_preds.append(y_pred)
+		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
 	plt.plot(lambdas, accuracy)
-	plt.savefig("lambdaAccuracy")
+	plt.savefig(fileName + "LambdaAccuracyNeural")
 
-	lambdas = np.linspace(10, 70, 7)
+	y_pred = y_preds[np.argmax(accuracy)]
+	cm = confusion_matrix(y, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "NeuralBestLambda", dpi=400)
+
+	iters = np.linspace(10, 70, 7)
 
 	accuracy = []
+	y_preds = []
 
-	for lamb in lambdas:
-		reg_param = lamb
+	reg_param = 1
+
+	for iter in iters:
 		fmin = opt.minimize(fun=backprop, x0=params_rn, args=(input_size, num_ocultas, num_labels,
-							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(lamb)})
+							X, y_onehot, reg_param), method='TNC', jac=True, options={'maxiter': int(iter)})
 
 		theta1_opt = np.reshape(
 			fmin.x[:num_ocultas * (input_size + 1)], (num_ocultas, (input_size + 1)))
@@ -251,14 +257,21 @@ def neural_network(X, y):
 			fmin.x[num_ocultas * (input_size + 1):], (num_labels, (num_ocultas + 1)))
 
 		a1, a2, h = propagar(X, theta1_opt, theta2_opt)
-		accuracy.append((np.sum((y == predict_nn(X, h)))/X.shape[0] * 100))
-	plt.figure()
-	plt.plot(lambdas, accuracy)
-	plt.savefig("iterationAccuracy")
-	#print(a)
+		y_pred = predict_nn(X, h)
+		y_preds.append(y_pred)
+		accuracy.append((np.sum((y == y_pred))/X.shape[0] * 100))
 
-def svm(X, y):
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+	y_pred = y_preds[np.argmax(accuracy)]
+	cm = confusion_matrix(y, y_pred)
+	plt.figure()
+	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
+	fig.savefig(fileName + "NeuralBestIter", dpi=400)
+
+	plt.figure()
+	plt.plot(iters, accuracy)
+	plt.savefig(fileName + "IterationAccuracyNeural")
+
+def svm(X_train, y_train, X_test, y_test, fileName):
 	X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) 
 	
 	values = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300]
@@ -295,71 +308,7 @@ def svm(X, y):
 	print('Matriz de confusión: ')
 	cm = confusion_matrix(y_test, y_pred)
 	fig = sns.heatmap(cm, annot=True,fmt="",cmap='Blues').get_figure()
-	fig.savefig('svm_conf.png', dpi=400)
-
-# 
-# 
-#def main():
-# 	data = carga_csv('data.csv')
-# 
-#	columns = [1, 5, 11, 12, 29, 33, 56, 64, 74]
-# 	#columns = [0, 3, 4, 5, 7, 9, 11]
-# 
-# 	#X = data.to_numpy()[:, columns]
-# 	Y = data["Bankrupt?"].values
-# 	# Obtiene un vector con los índices de los ejemplos positivos
-# 	pos = data[Y == 1]
-# 	neg = data[Y == 0]
-	# Cogemos solo 800 ejemplos negativos ya que hay demasiados
-# 	neg = neg[:220]
-# 
-	#X = np.concatenate((pos.to_numpy()[:, 1:], neg.to_numpy()[:, 1:]))
-# 	Y = np.concatenate((pos.to_numpy()[:, 0], neg.to_numpy()[:, 0]))
-
-# 	features = data.columns.to_numpy()[columns]
-# 
-# 	# Dibuja los ejemplos positivos
-	#fig = plt.figure()
-# 	plt.suptitle("Features distribution")
-# 
-# 	for i, f in enumerate(features):
-#		i += 1
-# 		ax = fig.add_subplot(3, 3, i)
-# 
-# 		# Plot corresponding histogram
-# 		ax.hist(neg[f], label="Not Bankrupt", stacked=True, alpha=0.5, color="g")
-#		ax.hist(pos[f], label="Bankrupt", stacked=True, alpha=0.5, color="r")
-# 		ax.set_title(f)
-# 
-# 	plt.tight_layout()
-# 	plt.legend()
-#	plt.savefig('features.png')
-# 	#plt.show()
-
-# 	#X = normalizar(X)[0]
-
-#	logistic_regression(X, Y)
-
-
-df = pd.read_csv('data.csv')
-
-#Take sample to balance the data
-cname = 'Bankrupt?'
-columns = np.arange(df.shape[1]-1)
-#columns = [1, 5, 11, 12, 29, 33, 56, 64, 74]
-
-non_bankrupt_sample = df[df[cname] == 0]
-size = non_bankrupt_sample.shape[0] * 0.5
-#non_bankrupt_sample = non_bankrupt_sample[:int(size)]
-non_bankrupt_sample = non_bankrupt_sample
-
-bankrupt_sample = df[df[cname] == 1]
-#create new data frame
-new_df = pd.concat([bankrupt_sample,non_bankrupt_sample],axis = 0)
-new_df.head()
-
-X_orig = new_df.drop(cname, axis=1)
-y_orig = new_df[cname]
+	fig.savefig(fileName + "SVM", dpi=400)
 
 ##  separate between fractional columns and non-fraction columns
 def get_fraction_valued_columns(df):
@@ -369,22 +318,64 @@ def get_fraction_valued_columns(df):
             my_columns.append(col)
     return(my_columns)
 
-fractional_columns = get_fraction_valued_columns(df=df.drop(['Bankrupt?'],axis=1))
-non_fractional_columns = df.drop(['Bankrupt?'],axis=1).columns.difference(fractional_columns)
-print("# Fractional  Columns number are:",len(fractional_columns),"\t","# Non  Fractional Columns number are:", len(non_fractional_columns))
+class data:
+	X = None
+	y = None
+	X_train = None
+	y_train = None
+	X_test = None
+	y_test = None
+	name = ""
+	def __init__(self, x, y, x_train, y_train, x_test, y_test, name):
+		self.X = x
+		self.y = y
+		self.X_train = x_train
+		self.y_train = y_train
+		self.X_test = x_test
+		self.y_test = y_test
+		self.name = name
+	def to_numpy(self):
+		self.X = self.X.to_numpy()
+		self.y = self.y.to_numpy()
+		self.X_train = self.X_train.to_numpy()
+		self.y_train = self.y_train.to_numpy()
+		self.X_test = self.X_test.to_numpy()
+		self.y_test = self.y_test.to_numpy()
 
-# plt.style.use('seaborn-whitegrid')
+df = pd.read_csv('data.csv')
 
-# df[non_fractional_columns].hist(bins = 20, figsize = (14,14), color = '#E14906')
-# plt.show()
+#Take sample to balance the data
+cname = 'Bankrupt?'
+columns = np.arange(df.shape[1]-1)
+#columns = [1, 5, 11, 12, 29, 33, 56, 64, 74]
 
+non_bankrupt_sample = df[df[cname] == 0]
+# size = non_bankrupt_sample.shape[0] * 0.5
+# non_bankrupt_sample_smote = non_bankrupt_sample[:int(size)]
+non_bankrupt_sample_cut = non_bankrupt_sample[:220]
+
+bankrupt_sample = df[df[cname] == 1]
+#create new data frame
+# smote_df = pd.concat([bankrupt_sample,non_bankrupt_sample_smote],axis = 0)
+# smote_df.head()
+cut_df = pd.concat([bankrupt_sample,non_bankrupt_sample_cut],axis = 0)
+cut_df.head()
+
+X_cut = cut_df.drop(cname, axis=1)
+y_cut = cut_df[cname]
+
+X_orig = df.drop(cname, axis=1)
+y_orig = df[cname]
+
+fractional_columns = get_fraction_valued_columns(df=df.drop([cname],axis=1))
+non_fractional_columns = df.drop([cname],axis=1).columns.difference(fractional_columns)
 norm = preprocessing.normalize(df[non_fractional_columns])
 normalized_df = pd.DataFrame(norm, columns=df[non_fractional_columns].columns)
 
 scaled_data = pd.concat([df.drop(non_fractional_columns,axis=1),normalized_df],axis = 1)
 
-X = scaled_data.drop('Bankrupt?', axis = 1)
-y = scaled_data['Bankrupt?']
+X = scaled_data.drop(cname, axis = 1)
+y = scaled_data[cname]
 
 sm = SMOTE(random_state=123)
 X_sm , y_sm = sm.fit_resample(X,y)
@@ -395,10 +386,10 @@ Shape of X after SMOTE:{X_sm.shape}''',"\n\n")
 print(f'''Target Class distributuion before SMOTE:\n{y.value_counts(normalize=True)}
 Target Class distributuion after SMOTE :\n{y_sm.value_counts(normalize=True)}''')
 
-pos = new_df[y_sm == 1]
-neg = new_df[y_sm == 0][:220]
+# pos = smote_df[y_sm == 1]
+# neg = smote_df[y_sm == 0][:220]
 
-features = new_df.columns.to_numpy()[columns]
+# features = smote_df.columns.to_numpy()[columns]
 
 # Dibuja los ejemplos positivos
 # fig = plt.figure()
@@ -418,17 +409,36 @@ features = new_df.columns.to_numpy()[columns]
 # plt.savefig('features.png')
 # plt.show()
 
-X_train, X_test, y_train, y_test = train_test_split(
+X_train_sm, X_test_sm, y_train_sm, y_test_sm = train_test_split(
 	X_sm, y_sm, test_size=0.2, random_state=777
 )
 
-X = X.to_numpy().astype(float)
-X_train = X_train.to_numpy().astype(float)
-X_test = X_test.to_numpy().astype(float)
+X_train_cut, X_test_cut, y_train_cut, y_test_cut = train_test_split(
+	X_cut, y_cut, test_size=0.2, random_state=777
+)
 
-#logistic_regression(X_train, y_train.to_numpy(), X_test, y_test.to_numpy())
+X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(
+	X_orig, y_orig, test_size=0.2, random_state=777
+)
 
-#neural_network(X, y.to_numpy())
+size = bankrupt_sample.shape[0] * 0.8
+bs = bankrupt_sample[int(size):]
+nbs = non_bankrupt_sample[(non_bankrupt_sample.shape[0] - bs.shape[0]):]
 
-svm(X_sm, y_sm.to_numpy())
-#svm(X_orig.to_numpy(), y_orig.to_numpy())
+ex_df = pd.concat([bs, nbs],axis = 0)
+ex_df.head()
+
+X_test_orig = ex_df.drop(cname, axis = 1)
+y_test_orig = ex_df[cname]
+
+datasets = [	
+	data(X_orig, y_orig, X_train_orig, y_train_orig, X_test_orig, y_test_orig, 'Original'),
+	data(X_cut, y_cut, X_train_cut, y_train_cut, X_test_cut, y_test_cut, 'Cut'),
+	data(X_sm, y_sm, X_train_sm, y_train_sm, X_test_sm, y_test_sm, 'Smote')
+]
+
+for d in datasets:
+	d.to_numpy()
+	logistic_regression(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
+	neural_network(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
+	svm(d.X_train, d.y_train, d.X_test, d.y_test, d.name)
